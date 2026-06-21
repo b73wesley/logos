@@ -16,6 +16,7 @@
 /logos_app/**/ios/Flutter/.last_build_id
 /logos_app/app.*.symbols
 /logos_app/app.*.map.json
+/logos_app/android/.kotlin/
 
 # Optional environment + editor files
 /logos_app/.vscode/
