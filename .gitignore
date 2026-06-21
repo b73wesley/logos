@@ -70,7 +70,8 @@ logos_backend/**/out/
 
 # Full-repo settings
 /.idea/
-/.vscode/
+/.vscode/*
+!/.vscode/launch.json
 *.iml
 *.ipr
 *.iws
