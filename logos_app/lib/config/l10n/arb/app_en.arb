@@ -1,0 +1,324 @@
+{
+  "@@locale": "en",
+  "appName": "Little Gift",
+  "@appName": {
+    "description": "The name of the app"
+  },
+  "home": "Home",
+  "@home": {
+    "description": "The home page of the app"
+  },
+  "settings": "Settings",
+  "@settings": {
+    "description": "The settings page of the app"
+  },
+  "menu": "Menu",
+  "@menu": {
+    "description": "The menu page of the app"
+  },
+  "suggestions_of_app": "Suggestions of the app",
+  "@suggestions_of_app": {
+    "description": "The suggestions page of the app"
+  },
+  "lets_start_journey": "Let's start your journey",
+  "@lets_start_journey": {
+    "description": "A message to encourage users to start using the app"
+  },
+  "all": "All",
+  "@all": {
+    "description": "Label for the 'all categories' filter option"
+  },
+  "receive_gifts_money_info": "Receive the value of gifts in the account you choose",
+  "@receive_gifts_money_info": {
+    "description": "Information about receiving gifts money"
+  },
+  "add": "Add",
+  "@add": {
+    "description": "Button to add an item"
+  },
+  "aditional_info": "Additional Information",
+  "@aditional_info": {
+    "description": "Label for additional information input field"
+  },
+  "aditional_info_hint": "e.g., Bring a sweet or savory dish",
+  "@aditional_info_hint": {
+    "description": "Placeholder text for additional information input field"
+  },
+  "welcome_title": "Welcome to {appName}!",
+  "@welcome_title": {
+    "description": "Welcome title with the app name as a parameter",
+    "placeholders": {
+      "appName": {
+        "type": "String",
+        "example": "MyApp"
+      }
+    }
+  },
+  "login_with_email_password": "Sign in with email and password",
+  "@login_with_email_password": {
+    "description": "Button or label text for logging in using email and password"
+  },
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+  "enter_password": "Enter your password",
+  "@enter_password": {
+    "description": "Placeholder text prompting the user to enter their password"
+  },
+  "password_label": "Password",
+  "@password_label": {
+    "description": "Label for the password input field"
+  },
+  "forgot_email_password": "Forgot email or password?",
+  "@forgot_email_password": {
+    "description": "Link or text for password recovery option"
+  },
+  "login": "Login",
+  "@login": {
+    "description": "text for logging in"
+  },
+  "no_account_sign_up": "Don't have an account? **Sign up**",
+  "@no_account_sign_up": {
+    "description": "Text prompting the user to register if they don't have an account"
+  },
+  "email_empty_error": "Email cannot be empty",
+  "@email_empty_error": {
+    "description": "Error message shown when the email field is left empty"
+  },
+  "password_empty_error": "Password cannot be empty",
+  "@password_empty_error": {
+    "description": "Error message shown when the password field is left empty"
+  },
+  "password_too_short_error": "Password must be at least 6 characters",
+  "@password_too_short_error": {
+    "description": "Error message shown when the password is shorter than the minimum required length"
+  },
+  "invalid_credentials_error": "Incorrect email or password",
+  "@invalid_credentials_error": {
+    "description": "Error message shown when login credentials are invalid"
+  },
+  "server_connection_error": "Unable to connect to the server",
+  "@server_connection_error": {
+    "description": "Error message shown when the app cannot connect to the server"
+  },
+  "network_error_retry": "Check your internet connection or try again later",
+  "@network_error_retry": {
+    "description": "Instruction displayed when the device is offline or connection failed"
+  },
+  "lets_connect": "Let's Connect With Us!",
+  "@lets_connect": {
+    "description": "Headline prompting the user to connect with the app or service"
+  },
+  "login_with_email": "Log in with email",
+  "@login_with_email": {
+    "description": "Button or label text to sign in using email"
+  },
+  "login_success": "Login successful!",
+  "@login_success": {
+    "description": "Short confirmation message shown after a successful login"
+  },
+  "continue_with_facebook": "Continue with Facebook",
+  "@continue_with_facebook": {
+    "description": "Button text to authenticate using Facebook"
+  },
+  "use_facebook_account": "Use your Facebook account",
+  "@use_facebook_account": {
+    "description": "Supporting text describing the Facebook login option"
+  },
+  "continue_with_google": "Continue with Google",
+  "@continue_with_google": {
+    "description": "Button text to authenticate using Google"
+  },
+  "use_google_account": "Use your Google account",
+  "@use_google_account": {
+    "description": "Supporting text describing the Google login option"
+  },
+  "required_field": "Required field",
+  "@required_field": {
+    "description": "Validation message shown when a required input field is not filled"
+  },
+  "address": "Address",
+  "@address": {
+    "description": "Label for the address input field"
+  },
+  "addresses": "Addresses",
+  "@addresses": {
+    "description": "Label for the addresses section or list"
+  },
+  "name": "Name {suffix}",
+  "@name": {
+    "description": "Name field label with the app name as a parameter",
+    "placeholders": {
+      "suffix": {
+        "type": "String",
+        "example": "Name (Optional)"
+      }
+    }
+  },
+  "postal_code": "Postal Code",
+  "@postal_code": {
+    "description": "Label for the postal code input field"
+  },
+  "state": "State",
+  "@state": {
+    "description": "Label for the state input field"
+  },
+  "city": "City",
+  "@city": {
+    "description": "Label for the city input field"
+  },
+  "street": "Street",
+  "@street": {
+    "description": "Label for the street input field"
+  },
+  "district": "District",
+  "@district": {
+    "description": "Label for the district input field"
+  },
+  "number": "Number",
+  "@number": {
+    "description": "Label for the number input field"
+  },
+  "complement": "Complement {suffix}",
+  "@complement": {
+    "description": "Label for the complement input field",
+    "placeholders": {
+      "suffix": {
+        "type": "String",
+        "example": "Complement (Optional)"
+      }
+    }
+  },
+  "country": "Country",
+  "@country": {
+    "description": "Label for the country input field"
+  },
+  "optional": "Optional",
+  "@optional": {
+    "description": "Indicates that a field is optional"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Button text to save changes or information"
+  },
+  "add_address": "Add Address",
+  "@add_address": {
+    "description": "Screen title for adding a new address"
+  },
+  "or_continue_with": "Or continue with",
+  "@or_continue_with": {
+    "description": "Text separating different login methods"
+  },
+  "google": "Google",
+  "@google": {
+    "description": "The Google brand name"
+  },
+  "facebook": "Facebook",
+  "@facebook": {
+    "description": "The Facebook brand name"
+  },
+  "create_account": "Create an account",
+  "@create_account": {
+    "description": "Button or link text to create a new user account"
+  },
+  "have_account_sign_in": "Already have an account? **Sign in**",
+  "@have_account_sign_in": {
+    "description": "Text prompting the user to sign in if they already have an account"
+  },
+  "logout": "Sign out",
+  "menu_section_info": "Information",
+  "menu_section_general": "General",
+  "menu_financial": "Financial",
+  "menu_about": "About the app",
+  "menu_terms": "Terms of use",
+  "menu_settings_title": "Settings",
+  "menu_about_title": "About the app",
+  "menu_terms_title": "Terms of use",
+  "menu_financial_title": "Financial",
+  "coming_soon": "Coming soon",
+  "coming_soon_description": "This feature is under development.",
+  "name_label": "Full name",
+  "@name_label": {
+    "description": "Label for the full name input field"
+  },
+  "confirm_password": "Confirm password",
+  "@confirm_password": {
+    "description": "Label for the confirm password input field"
+  },
+  "terms_accept_required": "You must accept the terms of use to continue",
+  "@terms_accept_required": {
+    "description": "Validation message shown when the user has not accepted the terms of use"
+  },
+  "sign_up": "Sign up",
+  "@sign_up": {
+    "description": "Button text to create a new account"
+  },
+  "confirm_password_empty_error": "Password confirmation cannot be empty",
+  "@confirm_password_empty_error": {
+    "description": "Error message shown when the confirm password field is left empty"
+  },
+  "passwords_do_not_match_error": "Passwords do not match",
+  "@passwords_do_not_match_error": {
+    "description": "Error message shown when the password and confirm password fields do not match"
+  },
+  "name_empty_error": "Name cannot be empty",
+  "@name_empty_error": {
+    "description": "Error message shown when the name field is left empty"
+  },
+  "invalid_email_error": "Enter a valid email",
+  "@invalid_email_error": {
+    "description": "Error message shown when the email format is invalid"
+  },
+  "email_already_in_use_error": "This email is already in use",
+  "@email_already_in_use_error": {
+    "description": "Error message shown when the email is already registered"
+  },
+  "sign_up_success": "Account created successfully!",
+  "@sign_up_success": {
+    "description": "Confirmation message shown after a successful sign up"
+  },
+  "menu_section_account": "Account",
+  "menu_section_app": "App",
+  "menu_profile": "Profile",
+  "menu_notifications": "Notifications",
+  "menu_privacy": "Privacy",
+  "menu_language": "Language",
+  "menu_help": "Help",
+  "menu_logout": "Sign out",
+  "menu_version": "Version {version}",
+  "@menu_version": {
+    "placeholders": {
+      "version": { "type": "String" }
+    }
+  },
+  "menu_payment_methods": "Payment Methods",
+  "menu_payment_methods_description": "Set up your payment methods to receive donations",
+  "profile_title": "My Profile",
+  "profile_edit": "Edit Profile",
+  "profile_name": "Name",
+  "profile_email": "Email",
+  "profile_phone": "Phone",
+  "profile_phone_placeholder": "Enter your phone number",
+  "profile_save_changes": "Save Changes",
+  "profile_cancel": "Cancel",
+  "profile_updated_success": "Profile updated successfully!",
+  "profile_updated_error": "Could not update profile. Please try again.",
+  "profile_change_password": "Change Password",
+  "profile_current_password": "Current Password",
+  "profile_new_password": "New Password",
+  "profile_confirm_password": "Confirm Password",
+  "profile_password_changed_success": "Password changed successfully!",
+  "profile_password_changed_error": "Could not change password. Please try again.",
+  "profile_passwords_do_not_match": "Passwords do not match",
+  "profile_password_too_short": "Password must be at least 6 characters",
+  "payments_title": "Payment Methods",
+  "payments_empty_title": "No payment methods",
+  "payments_empty_description": "Add a payment method so your guests can send donations",
+  "payments_add_method": "Add Payment Method",
+  "payments_add_method_description": "Set up how you want to receive donations from your guests"
+}

@@ -1,0 +1,1 @@
+enum AppTextFieldType { primary, description }

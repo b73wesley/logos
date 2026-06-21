@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "810532870392",
+    "project_id": "wandr-logos",
+    "storage_bucket": "wandr-logos.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:810532870392:android:acebecf27545d11eb1c30d",
+        "android_client_info": {
+          "package_name": "com.wandr.logos_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAu__OLZlrS7oc3yDRlbCU6hP75LhBQTj8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
