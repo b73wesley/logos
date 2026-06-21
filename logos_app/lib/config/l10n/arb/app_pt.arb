@@ -1,6 +1,6 @@
 {
     "@@locale": "pt",
-    "appName": "Little Gift",
+    "appName": "Logos",
     "home": "Home",
     "settings": "Configurações",
     "menu": "Menu",
@@ -31,7 +31,7 @@
     "login_success": "Login efetuado com sucesso!",
     "continue_with_facebook": "Continuar com o Facebook",
     "use_facebook_account": "Use sua conta do Facebook",
-    "continue_with_google": "Continuar com o Google",
+    "continue_with_google": "Entrar com o Google",
     "use_google_account": "Use sua conta do Google",
     "required_field": "Campo obrigatório",
     "name": "Nome {suffix}",
@@ -83,6 +83,10 @@
     "invalid_email_error": "Informe um email válido",
     "email_already_in_use_error": "Este email já está em uso",
     "sign_up_success": "Cadastro realizado com sucesso!",
+    "sign_up_terms_title": "Termos e Privacidade",
+    "sign_up_terms_body": "Ao criar uma conta, você concorda com nossos Termos de Uso e Política de Privacidade.",
+    "agree_and_create": "Concordar e Criar Conta",
+    "cancel": "Cancelar",
     "share_invite": "Compartilhar convite",
   "invite_share_message_with_name": "Venha fazer parte da festa de {ownerName}!\n\nAcesse: {link}",
   "@invite_share_message_with_name": {

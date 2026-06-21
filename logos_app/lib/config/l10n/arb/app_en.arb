@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appName": "Little Gift",
+  "appName": "Logos",
   "@appName": {
     "description": "The name of the app"
   },
@@ -130,7 +130,7 @@
   "@use_facebook_account": {
     "description": "Supporting text describing the Facebook login option"
   },
-  "continue_with_google": "Continue with Google",
+  "continue_with_google": "Sign in with Google",
   "@continue_with_google": {
     "description": "Button text to authenticate using Google"
   },
@@ -281,6 +281,22 @@
   "sign_up_success": "Account created successfully!",
   "@sign_up_success": {
     "description": "Confirmation message shown after a successful sign up"
+  },
+  "sign_up_terms_title": "Terms & Privacy",
+  "@sign_up_terms_title": {
+    "description": "Title of the terms confirmation dialog on sign up"
+  },
+  "sign_up_terms_body": "By creating an account, you agree to our Terms of Use and Privacy Policy.",
+  "@sign_up_terms_body": {
+    "description": "Body text of the terms confirmation dialog on sign up"
+  },
+  "agree_and_create": "Agree & Create Account",
+  "@agree_and_create": {
+    "description": "Confirm button on the terms dialog"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button label"
   },
   "menu_section_account": "Account",
   "menu_section_app": "App",

@@ -5,14 +5,13 @@ import 'package:logos_app/core/preferences.dart';
 import 'package:logos_app/firebase_options.dart';
 import 'package:logos_app/routing/router.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Preferences.init();
 
-  runApp(MultiProvider(providers: [], child: const App()));
+  runApp(const App());
 }
 
 class App extends StatelessWidget {
