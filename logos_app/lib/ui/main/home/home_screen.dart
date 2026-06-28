@@ -1,16 +1,22 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:logos_app/core/design_tokens/app_colors.dart';
 import 'package:logos_app/core/design_tokens/app_radius.dart';
 import 'package:logos_app/core/design_tokens/spacing.dart';
 import 'package:logos_app/core/design_tokens/text_style_theme.dart';
 import 'package:logos_app/core/preferences.dart';
+import 'package:logos_app/domain/annotation/annotation_models.dart';
 import 'package:logos_app/domain/bible/bible_models.dart';
+import 'package:logos_app/ui/main/home/annotation_view_model.dart';
 import 'package:logos_app/ui/main/home/home_view_model.dart';
 import 'package:logos_app/ui/main/home/widgets/book_selector_bottom_sheet.dart';
+import 'package:logos_app/ui/main/home/widgets/chapter_note_bottom_sheet.dart';
 import 'package:logos_app/ui/main/home/widgets/reader_settings_bottom_sheet.dart';
 import 'package:logos_app/ui/main/home/widgets/translation_selector_bottom_sheet.dart';
+import 'package:logos_app/ui/main/home/widgets/verse_annotation_bottom_sheet.dart';
 import 'package:logos_app/ui/widgets/app_empty_state_view.dart';
 import 'package:logos_app/ui/widgets/app_typography.dart';
+import 'package:logos_app/ui/widgets/app_typography_md.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -187,7 +193,15 @@ class _ReaderBody extends StatelessWidget {
         PageView.builder(
           controller: vm.pageController,
           itemCount: vm.currentBook?.totalChapters ?? 0,
-          onPageChanged: vm.onPageChanged,
+          onPageChanged: (page) {
+            vm.onPageChanged(page);
+            // Load annotations for the new chapter.
+            final book = vm.currentBook;
+            if (book != null && page < book.chapters.length) {
+              final chapter = book.chapters[page];
+              context.read<AnnotationViewModel>().loadChapter(chapter.bookNumber, chapter.chapterNumber);
+            }
+          },
           itemBuilder: (context, chapterIndex) {
             final book = vm.currentBook;
             if (book == null || chapterIndex >= book.chapters.length) {
@@ -225,49 +239,133 @@ class _ChapterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              Spacing.screenHorizontal,
-              Spacing.xxs3,
-              Spacing.screenHorizontal,
-              Spacing.xxs1,
-            ),
-            child: Column(
-              children: [
-                AppTypography(
-                  'CAPÍTULO',
-                  textStyleTheme: TextStyleTheme.labelSmall,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.darkText50,
-                  textAlign: TextAlign.center,
+    return Consumer<AnnotationViewModel>(
+      builder: (context, annotationVm, _) {
+        final chapterNote = annotationVm.chapterNote;
+        final hasNote = annotationVm.chapterHasNote(chapter.bookNumber, chapter.chapterNumber);
+
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  Spacing.screenHorizontal,
+                  Spacing.xxs3,
+                  Spacing.screenHorizontal,
+                  Spacing.xxs1,
                 ),
-                const SizedBox(height: Spacing.xs2),
-                AppTypography(
-                  '${chapter.chapterNumber}',
-                  textStyleTheme: TextStyleTheme.headlineLarge,
-                  fontWeight: FontWeight.w700,
-                  textAlign: TextAlign.center,
+                child: Column(
+                  children: [
+                    AppTypography(
+                      'CAPÍTULO',
+                      textStyleTheme: TextStyleTheme.labelSmall,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.darkText50,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: Spacing.xs2),
+                    // Tap on chapter number to add/edit chapter note
+                    GestureDetector(
+                      onTap: () => ChapterNoteBottomSheet.show(
+                        context,
+                        bookNumber: chapter.bookNumber,
+                        bookName: book.name,
+                        chapter: chapter.chapterNumber,
+                        existing: chapterNote,
+                      ),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        children: [
+                          AppTypography(
+                            '${chapter.chapterNumber}',
+                            textStyleTheme: TextStyleTheme.headlineLarge,
+                            fontWeight: FontWeight.w700,
+                            textAlign: TextAlign.center,
+                          ),
+                          if (hasNote)
+                            Positioned(
+                              right: -20,
+                              top: 0,
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.warning,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    // Show note preview if exists
+                    if (hasNote && chapterNote != null) ...[
+                      const SizedBox(height: Spacing.xs3),
+                      GestureDetector(
+                        onTap: () => ChapterNoteBottomSheet.show(
+                          context,
+                          bookNumber: chapter.bookNumber,
+                          bookName: book.name,
+                          chapter: chapter.chapterNumber,
+                          existing: chapterNote,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: Spacing.xs8, vertical: Spacing.xs4),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondaryBackgroundButton,
+                            borderRadius: BorderRadius.circular(AppRadius.xs1),
+                            border: Border.all(color: AppColors.warning30),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(top: 2),
+                                child: Icon(Icons.edit_note_rounded, size: 16, color: AppColors.warning),
+                              ),
+                              const SizedBox(width: Spacing.xs3),
+                              Expanded(
+                                child: AppTypographyMD(
+                                  chapterNote.note,
+                                  textStyleTheme: TextStyleTheme.bodySmall,
+                                  color: AppColors.warning,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: Spacing.xxs3),
+                  ],
                 ),
-                const SizedBox(height: Spacing.xxs3),
-              ],
+              ),
             ),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(
-            Spacing.screenHorizontal,
-            0,
-            Spacing.screenHorizontal,
-            96, // space for nav bar
-          ),
-          sliver: displayMode == VerseDisplayMode.list
-              ? _VerseListSliver(chapter: chapter, fontSize: fontSize)
-              : _VerseBibleStyleSliver(chapter: chapter, fontSize: fontSize),
-        ),
-      ],
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                Spacing.screenHorizontal,
+                0,
+                Spacing.screenHorizontal,
+                96, // space for nav bar
+              ),
+              sliver: displayMode == VerseDisplayMode.list
+                  ? _VerseListSliver(
+                      chapter: chapter,
+                      fontSize: fontSize,
+                      bookName: book.name,
+                      annotationVm: annotationVm,
+                    )
+                  : _VerseBibleStyleSliver(
+                      chapter: chapter,
+                      fontSize: fontSize,
+                      bookName: book.name,
+                      annotationVm: annotationVm,
+                    ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -278,16 +376,28 @@ class _ChapterPage extends StatelessWidget {
 class _VerseListSliver extends StatelessWidget {
   final BibleChapter chapter;
   final VerseFontSize fontSize;
+  final String bookName;
+  final AnnotationViewModel annotationVm;
 
-  const _VerseListSliver({required this.chapter, required this.fontSize});
+  const _VerseListSliver({
+    required this.chapter,
+    required this.fontSize,
+    required this.bookName,
+    required this.annotationVm,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) => _VerseListItem(verse: chapter.verses[index], fontSize: fontSize),
-        childCount: chapter.verses.length,
-      ),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final verse = chapter.verses[index];
+        final annotation = annotationVm.annotationForVerse(
+          verse.bookNumber,
+          verse.chapter,
+          verse.verseNumber,
+        );
+        return _VerseListItem(verse: verse, fontSize: fontSize, bookName: bookName, annotation: annotation);
+      }, childCount: chapter.verses.length),
     );
   }
 }
@@ -295,35 +405,92 @@ class _VerseListSliver extends StatelessWidget {
 class _VerseListItem extends StatelessWidget {
   final BibleVerse verse;
   final VerseFontSize fontSize;
+  final String bookName;
+  final VerseAnnotation? annotation;
 
-  const _VerseListItem({required this.verse, required this.fontSize});
+  const _VerseListItem({
+    required this.verse,
+    required this.fontSize,
+    required this.bookName,
+    required this.annotation,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: Spacing.xs6),
-      child: RichText(
-        text: TextSpan(
+    final highlight = annotation?.highlightColor;
+    final hasComment = annotation?.hasComment ?? false;
+
+    return GestureDetector(
+      onTap: () =>
+          VerseAnnotationBottomSheet.show(context, verse: verse, bookName: bookName, existing: annotation),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: Spacing.xs6),
+        decoration: highlight != null
+            ? BoxDecoration(
+                color: highlight.color,
+                borderRadius: BorderRadius.circular(AppRadius.xs1),
+                border: Border(left: BorderSide(color: highlight.borderColor, width: 3)),
+              )
+            : null,
+        padding: highlight != null
+            ? const EdgeInsets.symmetric(horizontal: Spacing.xs6, vertical: Spacing.xs3)
+            : EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            WidgetSpan(
-              alignment: PlaceholderAlignment.top,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 3),
-                child: Text(
-                  '${verse.verseNumber}',
-                  style: TextStyle(
-                    fontSize: fontSize.verseNumberSize,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                    height: 1.85,
+            RichText(
+              text: TextSpan(
+                children: [
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.top,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 3),
+                      child: Text(
+                        '${verse.verseNumber}',
+                        style: TextStyle(
+                          fontSize: fontSize.verseNumberSize,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                          height: 1.85,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  TextSpan(
+                    text: verse.text,
+                    style: TextStyle(
+                      fontSize: fontSize.verseBodySize,
+                      color: AppColors.darkText90,
+                      height: 1.7,
+                    ),
+                  ),
+                ],
               ),
             ),
-            TextSpan(
-              text: verse.text,
-              style: TextStyle(fontSize: fontSize.verseBodySize, color: AppColors.darkText90, height: 1.7),
-            ),
+            if (hasComment) ...[
+              const SizedBox(height: Spacing.xs2),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: 12,
+                      color: highlight != null ? highlight.borderColor : AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: Spacing.xs2),
+                  Expanded(
+                    child: AppTypographyMD(
+                      annotation!.comment!,
+                      textStyleTheme: TextStyleTheme.bodySmall,
+                      color: highlight != null ? highlight.borderColor : AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -337,52 +504,131 @@ class _VerseListItem extends StatelessWidget {
 class _VerseBibleStyleSliver extends StatelessWidget {
   final BibleChapter chapter;
   final VerseFontSize fontSize;
+  final String bookName;
+  final AnnotationViewModel annotationVm;
 
-  const _VerseBibleStyleSliver({required this.chapter, required this.fontSize});
+  const _VerseBibleStyleSliver({
+    required this.chapter,
+    required this.fontSize,
+    required this.bookName,
+    required this.annotationVm,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
-      child: _ContinuousChapterText(chapter: chapter, fontSize: fontSize),
+      child: _ContinuousChapterText(
+        chapter: chapter,
+        fontSize: fontSize,
+        bookName: bookName,
+        annotationVm: annotationVm,
+      ),
     );
   }
 }
 
-class _ContinuousChapterText extends StatelessWidget {
+/// Stateful so TapGestureRecognizers are properly disposed.
+class _ContinuousChapterText extends StatefulWidget {
   final BibleChapter chapter;
   final VerseFontSize fontSize;
+  final String bookName;
+  final AnnotationViewModel annotationVm;
 
-  const _ContinuousChapterText({required this.chapter, required this.fontSize});
+  const _ContinuousChapterText({
+    required this.chapter,
+    required this.fontSize,
+    required this.bookName,
+    required this.annotationVm,
+  });
+
+  @override
+  State<_ContinuousChapterText> createState() => _ContinuousChapterTextState();
+}
+
+class _ContinuousChapterTextState extends State<_ContinuousChapterText> {
+  final List<TapGestureRecognizer> _recognizers = [];
+
+  @override
+  void dispose() {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Dispose old recognizers before rebuilding.
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+
     final spans = <InlineSpan>[];
 
-    for (final verse in chapter.verses) {
-      // Verse number as inline superscript
+    for (final verse in widget.chapter.verses) {
+      final annotation = widget.annotationVm.annotationForVerse(
+        verse.bookNumber,
+        verse.chapter,
+        verse.verseNumber,
+      );
+      final highlight = annotation?.highlightColor;
+
+      // Create a recognizer per verse — tap opens the annotation sheet.
+      final recognizer = TapGestureRecognizer()
+        ..onTap = () => VerseAnnotationBottomSheet.show(
+          context,
+          verse: verse,
+          bookName: widget.bookName,
+          existing: annotation,
+        );
+      _recognizers.add(recognizer);
+
+      // Verse number superscript — pure TextSpan, no WidgetSpan.
       spans.add(
-        WidgetSpan(
-          alignment: PlaceholderAlignment.top,
-          child: Padding(
-            padding: const EdgeInsets.only(right: 2),
-            child: Text(
-              '${verse.verseNumber}',
-              style: TextStyle(
-                fontSize: fontSize.verseNumberSize,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-                height: 1.85,
-              ),
-            ),
+        TextSpan(
+          text: '${verse.verseNumber}',
+          recognizer: recognizer,
+          style: TextStyle(
+            fontSize: widget.fontSize.verseNumberSize,
+            fontWeight: FontWeight.w700,
+            color: AppColors.primary,
+            height: 1.85,
           ),
         ),
       );
 
-      // Verse text — trailing space flows into the next verse number
+      // Comment indicator — shown only when the verse has a comment.
+      if (annotation?.hasComment == true) {
+        spans.add(
+          WidgetSpan(
+            alignment: PlaceholderAlignment.top,
+            child: GestureDetector(
+              onTap: recognizer.onTap,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 1),
+                child: Icon(
+                  Icons.edit_outlined,
+                  size: widget.fontSize.verseNumberSize + 1,
+                  color: AppColors.primary.withValues(alpha: 0.75),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Verse body — backgroundColor applies the highlight without breaking flow.
       spans.add(
         TextSpan(
-          text: '${verse.text} ',
-          style: TextStyle(fontSize: fontSize.verseBodySize, color: AppColors.darkText90, height: 1.7),
+          text: ' ${verse.text} ',
+          recognizer: recognizer,
+          style: TextStyle(
+            fontSize: widget.fontSize.verseBodySize,
+            color: AppColors.darkText90,
+            height: 1.7,
+            backgroundColor: highlight?.color,
+          ),
         ),
       );
     }
