@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:logos_app/core/design_tokens/app_colors.dart';
 import 'package:logos_app/core/design_tokens/app_radius.dart';
-import 'package:logos_app/core/design_tokens/font_size.dart';
 import 'package:logos_app/core/design_tokens/spacing.dart';
 import 'package:logos_app/core/design_tokens/text_style_theme.dart';
+import 'package:logos_app/core/preferences.dart';
 import 'package:logos_app/domain/bible/bible_models.dart';
 import 'package:logos_app/ui/main/home/home_view_model.dart';
 import 'package:logos_app/ui/main/home/widgets/book_selector_bottom_sheet.dart';
+import 'package:logos_app/ui/main/home/widgets/reader_settings_bottom_sheet.dart';
 import 'package:logos_app/ui/main/home/widgets/translation_selector_bottom_sheet.dart';
 import 'package:logos_app/ui/widgets/app_empty_state_view.dart';
 import 'package:logos_app/ui/widgets/app_typography.dart';
@@ -21,7 +22,6 @@ class HomeScreen extends StatelessWidget {
       builder: (context, vm, _) {
         return Scaffold(
           backgroundColor: AppColors.backgroundLight,
-          // Custom AppBar with translation + book info controls
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(56),
             child: _ReaderAppBar(vm: vm),
@@ -55,7 +55,6 @@ class _ReaderAppBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: Spacing.xs4),
         child: Row(
           children: [
-            // Translation badge — tappable
             _ControlChip(
               label: vm.selectedTranslation.abbreviation,
               onTap: () => TranslationSelectorBottomSheet.show(
@@ -65,24 +64,11 @@ class _ReaderAppBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: Spacing.xs3),
-            // Book + chapter — tappable
             Expanded(
               child: GestureDetector(
                 onTap: () {
                   if (vm.books.isEmpty) return;
-                  BookSelectorBottomSheet.show(
-                    context,
-                    books: vm.books,
-                    currentBookIndex: vm.selectedBookIndex,
-                    currentChapterIndex: vm.selectedChapterIndex,
-                    onSelect: (bookIdx, chapIdx) {
-                      vm.selectBook(bookIdx);
-                      // selectChapter after book change requires a frame delay
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        vm.selectChapter(chapIdx);
-                      });
-                    },
-                  );
+                  _openBookSelector(context, vm);
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: Spacing.xs6, vertical: Spacing.xs2),
@@ -110,15 +96,37 @@ class _ReaderAppBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: Spacing.xs3),
-            // Search (placeholder)
             _IconBtn(icon: Icons.search_rounded, onTap: () {}),
-            // Settings (placeholder)
-            _IconBtn(icon: Icons.settings_outlined, onTap: () {}),
+            _IconBtn(
+              icon: Icons.settings_outlined,
+              onTap: () => ReaderSettingsBottomSheet.show(
+                context,
+                currentMode: vm.verseDisplayMode,
+                currentFontSize: vm.verseFontSize,
+                onModeChanged: vm.setVerseDisplayMode,
+                onFontSizeChanged: vm.setVerseFontSize,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+void _openBookSelector(BuildContext context, HomeViewModel vm) {
+  BookSelectorBottomSheet.show(
+    context,
+    books: vm.books,
+    currentBookIndex: vm.selectedBookIndex,
+    currentChapterIndex: vm.selectedChapterIndex,
+    onSelect: (bookIdx, chapIdx) {
+      vm.selectBook(bookIdx);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        vm.selectChapter(chapIdx);
+      });
+    },
+  );
 }
 
 class _ControlChip extends StatelessWidget {
@@ -176,7 +184,6 @@ class _ReaderBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Horizontal PageView — one page per chapter
         PageView.builder(
           controller: vm.pageController,
           itemCount: vm.currentBook?.totalChapters ?? 0,
@@ -187,10 +194,14 @@ class _ReaderBody extends StatelessWidget {
               return const SizedBox.shrink();
             }
             final chapter = book.chapters[chapterIndex];
-            return _ChapterPage(book: book, chapter: chapter);
+            return _ChapterPage(
+              book: book,
+              chapter: chapter,
+              displayMode: vm.verseDisplayMode,
+              fontSize: vm.verseFontSize,
+            );
           },
         ),
-        // Floating navigation buttons at the bottom
         Positioned(left: 0, right: 0, bottom: 0, child: _NavigationBar(vm: vm)),
       ],
     );
@@ -202,14 +213,20 @@ class _ReaderBody extends StatelessWidget {
 class _ChapterPage extends StatelessWidget {
   final BibleBook book;
   final BibleChapter chapter;
+  final VerseDisplayMode displayMode;
+  final VerseFontSize fontSize;
 
-  const _ChapterPage({required this.book, required this.chapter});
+  const _ChapterPage({
+    required this.book,
+    required this.chapter,
+    required this.displayMode,
+    required this.fontSize,
+  });
 
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
       slivers: [
-        // Chapter header
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -239,31 +256,47 @@ class _ChapterPage extends StatelessWidget {
             ),
           ),
         ),
-        // Verses
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(
+          padding: const EdgeInsets.fromLTRB(
             Spacing.screenHorizontal,
             0,
             Spacing.screenHorizontal,
-            // Extra bottom padding so last verse isn't hidden behind nav bar
-            96,
+            96, // space for nav bar
           ),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final verse = chapter.verses[index];
-              return _VerseItem(verse: verse);
-            }, childCount: chapter.verses.length),
-          ),
+          sliver: displayMode == VerseDisplayMode.list
+              ? _VerseListSliver(chapter: chapter, fontSize: fontSize)
+              : _VerseBibleStyleSliver(chapter: chapter, fontSize: fontSize),
         ),
       ],
     );
   }
 }
 
-class _VerseItem extends StatelessWidget {
-  final BibleVerse verse;
+// ── List mode ─────────────────────────────────────────────────────────────
 
-  const _VerseItem({required this.verse});
+/// One verse per row, with spacing between each.
+class _VerseListSliver extends StatelessWidget {
+  final BibleChapter chapter;
+  final VerseFontSize fontSize;
+
+  const _VerseListSliver({required this.chapter, required this.fontSize});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) => _VerseListItem(verse: chapter.verses[index], fontSize: fontSize),
+        childCount: chapter.verses.length,
+      ),
+    );
+  }
+}
+
+class _VerseListItem extends StatelessWidget {
+  final BibleVerse verse;
+  final VerseFontSize fontSize;
+
+  const _VerseListItem({required this.verse, required this.fontSize});
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +305,6 @@ class _VerseItem extends StatelessWidget {
       child: RichText(
         text: TextSpan(
           children: [
-            // Superscript verse number
             WidgetSpan(
               alignment: PlaceholderAlignment.top,
               child: Padding(
@@ -280,21 +312,84 @@ class _VerseItem extends StatelessWidget {
                 child: Text(
                   '${verse.verseNumber}',
                   style: TextStyle(
-                    fontSize: FontSize.labelSmall,
+                    fontSize: fontSize.verseNumberSize,
                     fontWeight: FontWeight.w600,
                     color: AppColors.primary,
-                    height: 1.8,
+                    height: 1.85,
                   ),
                 ),
               ),
             ),
             TextSpan(
               text: verse.text,
-              style: TextStyle(fontSize: FontSize.bodyLarge, color: AppColors.darkText90, height: 1.7),
+              style: TextStyle(fontSize: fontSize.verseBodySize, color: AppColors.darkText90, height: 1.7),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Bible style mode ──────────────────────────────────────────────────────
+
+/// All verses flow as a single continuous block of text.
+class _VerseBibleStyleSliver extends StatelessWidget {
+  final BibleChapter chapter;
+  final VerseFontSize fontSize;
+
+  const _VerseBibleStyleSliver({required this.chapter, required this.fontSize});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: _ContinuousChapterText(chapter: chapter, fontSize: fontSize),
+    );
+  }
+}
+
+class _ContinuousChapterText extends StatelessWidget {
+  final BibleChapter chapter;
+  final VerseFontSize fontSize;
+
+  const _ContinuousChapterText({required this.chapter, required this.fontSize});
+
+  @override
+  Widget build(BuildContext context) {
+    final spans = <InlineSpan>[];
+
+    for (final verse in chapter.verses) {
+      // Verse number as inline superscript
+      spans.add(
+        WidgetSpan(
+          alignment: PlaceholderAlignment.top,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 2),
+            child: Text(
+              '${verse.verseNumber}',
+              style: TextStyle(
+                fontSize: fontSize.verseNumberSize,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
+                height: 1.85,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Verse text — trailing space flows into the next verse number
+      spans.add(
+        TextSpan(
+          text: '${verse.text} ',
+          style: TextStyle(fontSize: fontSize.verseBodySize, color: AppColors.darkText90, height: 1.7),
+        ),
+      );
+    }
+
+    return RichText(
+      text: TextSpan(children: spans),
+      textAlign: TextAlign.left,
     );
   }
 }
@@ -332,30 +427,17 @@ class _NavigationBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Previous chapter
           _NavButton(
             icon: Icons.chevron_left_rounded,
             label: 'Anterior',
             onTap: isFirst ? null : vm.previousChapter,
           ),
           const SizedBox(width: Spacing.xs4),
-          // Chapter indicator — tappable opens book selector
           Expanded(
             child: GestureDetector(
               onTap: () {
                 if (vm.books.isEmpty) return;
-                BookSelectorBottomSheet.show(
-                  context,
-                  books: vm.books,
-                  currentBookIndex: vm.selectedBookIndex,
-                  currentChapterIndex: vm.selectedChapterIndex,
-                  onSelect: (bookIdx, chapIdx) {
-                    vm.selectBook(bookIdx);
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      vm.selectChapter(chapIdx);
-                    });
-                  },
-                );
+                _openBookSelector(context, vm);
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: Spacing.xs5),
@@ -389,7 +471,6 @@ class _NavigationBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: Spacing.xs4),
-          // Next chapter
           _NavButton(
             icon: Icons.chevron_right_rounded,
             label: 'Próximo',

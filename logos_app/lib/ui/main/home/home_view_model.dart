@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:logos_app/core/preferences.dart';
 import 'package:logos_app/domain/bible/bible_models.dart';
 import 'package:logos_app/domain/bible/bible_repository.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final BibleRepository _repository;
+  final Preferences _prefs;
 
-  HomeViewModel(this._repository) {
+  HomeViewModel(this._repository, this._prefs) {
     _init();
   }
 
@@ -24,6 +26,12 @@ class HomeViewModel extends ChangeNotifier {
   // the PageView resets to page 0.
   PageController pageController = PageController();
 
+  // Verse display mode — persisted via SharedPreferences.
+  late VerseDisplayMode verseDisplayMode;
+
+  // Verse font size — persisted via SharedPreferences.
+  late VerseFontSize verseFontSize;
+
   // ── Derived ───────────────────────────────────────────────────────────────
 
   BibleBook? get currentBook => books.isNotEmpty ? books[selectedBookIndex] : null;
@@ -39,6 +47,8 @@ class HomeViewModel extends ChangeNotifier {
   // ── Init ──────────────────────────────────────────────────────────────────
 
   Future<void> _init() async {
+    verseDisplayMode = _prefs.verseDisplayMode;
+    verseFontSize = _prefs.verseFontSize;
     await _loadTranslation();
   }
 
@@ -118,6 +128,20 @@ class HomeViewModel extends ChangeNotifier {
   void _resetPageController({int initialPage = 0}) {
     pageController.dispose();
     pageController = PageController(initialPage: initialPage);
+  }
+
+  Future<void> setVerseDisplayMode(VerseDisplayMode mode) async {
+    if (mode == verseDisplayMode) return;
+    verseDisplayMode = mode;
+    await _prefs.setVerseDisplayMode(mode);
+    notifyListeners();
+  }
+
+  Future<void> setVerseFontSize(VerseFontSize size) async {
+    if (size == verseFontSize) return;
+    verseFontSize = size;
+    await _prefs.setVerseFontSize(size);
+    notifyListeners();
   }
 
   @override

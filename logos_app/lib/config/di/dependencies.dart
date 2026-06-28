@@ -4,6 +4,7 @@ import 'package:logos_app/data/services/authImpl/auth_service_impl.dart';
 import 'package:logos_app/data/services/bibleImpl/bible_service_impl.dart';
 import 'package:logos_app/domain/auth/auth_repository.dart';
 import 'package:logos_app/domain/bible/bible_repository.dart';
+import 'package:logos_app/core/preferences.dart';
 import 'package:logos_app/ui/auth/view_model/auth_view_model.dart';
 import 'package:logos_app/ui/main/home/home_view_model.dart';
 import 'package:provider/provider.dart';
@@ -30,8 +31,8 @@ List<SingleChildWidget> buildProviders() {
       update: (_, service, __) => BibleRepositoryImpl(service),
     ),
     ChangeNotifierProxyProvider<BibleRepository, HomeViewModel>(
-      create: (ctx) => HomeViewModel(ctx.read<BibleRepository>()),
-      update: (_, repository, vm) => vm ?? HomeViewModel(repository),
+      create: (ctx) => HomeViewModel(ctx.read<BibleRepository>(), Preferences()),
+      update: (_, repository, vm) => vm ?? HomeViewModel(repository, Preferences()),
     ),
   ];
 }
