@@ -42,6 +42,7 @@ class VerseAnnotationBottomSheet extends StatefulWidget {
 class _VerseAnnotationBottomSheetState extends State<VerseAnnotationBottomSheet> {
   late final TextEditingController _commentController;
   HighlightColor? _selectedColor;
+  HighlightMode _highlightMode = HighlightMode.background;
   bool _removeHighlight = false;
   bool _showCommentPreview = false;
 
@@ -50,6 +51,7 @@ class _VerseAnnotationBottomSheetState extends State<VerseAnnotationBottomSheet>
     super.initState();
     _commentController = TextEditingController(text: widget.existing?.comment ?? '');
     _selectedColor = widget.existing?.highlightColor;
+    _highlightMode = widget.existing?.highlightMode ?? HighlightMode.background;
   }
 
   @override
@@ -78,6 +80,7 @@ class _VerseAnnotationBottomSheetState extends State<VerseAnnotationBottomSheet>
       chapter: widget.verse.chapter,
       verseNumber: widget.verse.verseNumber,
       highlightColor: _selectedColor,
+      highlightMode: _highlightMode,
       comment: _commentController.text,
       removeHighlight: _removeHighlight,
     );
@@ -125,11 +128,13 @@ class _VerseAnnotationBottomSheetState extends State<VerseAnnotationBottomSheet>
             ),
             const SizedBox(height: Spacing.xs3),
 
-            // Verse text preview
+            // Verse text preview — updates live with color + mode selection
             Container(
               padding: const EdgeInsets.all(Spacing.xs8),
               decoration: BoxDecoration(
-                color: _selectedColor?.color ?? AppColors.darkText05,
+                color: (_selectedColor != null && _highlightMode == HighlightMode.background)
+                    ? _selectedColor!.color
+                    : AppColors.darkText05,
                 borderRadius: BorderRadius.circular(AppRadius.xs1),
                 border: _selectedColor != null
                     ? Border(left: BorderSide(color: _selectedColor!.borderColor, width: 3))
@@ -137,10 +142,15 @@ class _VerseAnnotationBottomSheetState extends State<VerseAnnotationBottomSheet>
               ),
               child: Text(
                 widget.verse.text,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: FontSize.bodyMedium,
-                  color: AppColors.darkText90,
+                  color: (_selectedColor != null && _highlightMode == HighlightMode.textColor)
+                      ? _selectedColor!.borderColor
+                      : AppColors.darkText90,
                   height: 1.6,
+                  fontWeight: (_selectedColor != null && _highlightMode == HighlightMode.textColor)
+                      ? FontWeight.w600
+                      : FontWeight.normal,
                 ),
               ),
             ),
@@ -189,6 +199,46 @@ class _VerseAnnotationBottomSheetState extends State<VerseAnnotationBottomSheet>
                   ),
                 );
               }).toList(),
+            ),
+            const SizedBox(height: Spacing.xs4),
+
+            // Highlight mode switch
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: Spacing.xs8, vertical: Spacing.xs3),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.xs1),
+                border: Border.all(color: AppColors.darkText10),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _highlightMode == HighlightMode.textColor
+                        ? Icons.format_color_text_rounded
+                        : Icons.format_color_fill_rounded,
+                    size: 18,
+                    color: AppColors.darkText60,
+                  ),
+                  const SizedBox(width: Spacing.xs4),
+                  Expanded(
+                    child: AppTypography(
+                      _highlightMode == HighlightMode.textColor ? 'Letra colorida' : 'Texto marcado',
+                      textStyleTheme: TextStyleTheme.bodyMedium,
+                      color: AppColors.darkText,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _highlightMode == HighlightMode.textColor,
+                    onChanged: _selectedColor == null
+                        ? null
+                        : (on) => setState(() {
+                            _highlightMode = on ? HighlightMode.textColor : HighlightMode.background;
+                          }),
+                    activeThumbColor: AppColors.primary,
+                    activeTrackColor: AppColors.primary40,
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: Spacing.xxs1),
 

@@ -51,6 +51,7 @@ class AnnotationViewModel extends ChangeNotifier {
     required int chapter,
     required int verseNumber,
     HighlightColor? highlightColor,
+    HighlightMode highlightMode = HighlightMode.background,
     required String comment,
     required bool removeHighlight,
   }) async {
@@ -66,6 +67,7 @@ class AnnotationViewModel extends ChangeNotifier {
       chapter: chapter,
       verseNumber: verseNumber,
       highlightColor: removeHighlight ? null : (highlightColor ?? existing?.highlightColor),
+      highlightMode: removeHighlight ? HighlightMode.background : highlightMode,
       comment: comment.trim().isEmpty ? null : comment.trim(),
       updatedAt: DateTime.now(),
     );

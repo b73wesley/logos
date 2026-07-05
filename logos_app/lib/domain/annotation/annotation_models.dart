@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+/// How the highlight color is applied to verse text.
+enum HighlightMode {
+  /// Color fills the text background (default).
+  background,
+
+  /// Color is applied to the text itself — colored font.
+  textColor,
+}
+
 /// Available highlight colors for verse markers.
 enum HighlightColor {
   yellow,
@@ -47,6 +56,9 @@ class VerseAnnotation {
   final int chapter;
   final int verseNumber;
   final HighlightColor? highlightColor;
+
+  /// Whether the color paints the background or the text.
+  final HighlightMode highlightMode;
   final String? comment;
   final DateTime updatedAt;
 
@@ -56,6 +68,7 @@ class VerseAnnotation {
     required this.chapter,
     required this.verseNumber,
     this.highlightColor,
+    this.highlightMode = HighlightMode.background,
     this.comment,
     required this.updatedAt,
   });
@@ -69,6 +82,7 @@ class VerseAnnotation {
 
   VerseAnnotation copyWith({
     HighlightColor? highlightColor,
+    HighlightMode? highlightMode,
     Object? comment = _sentinel,
     DateTime? updatedAt,
   }) {
@@ -78,6 +92,7 @@ class VerseAnnotation {
       chapter: chapter,
       verseNumber: verseNumber,
       highlightColor: highlightColor ?? this.highlightColor,
+      highlightMode: highlightMode ?? this.highlightMode,
       comment: comment == _sentinel ? this.comment : comment as String?,
       updatedAt: updatedAt ?? DateTime.now(),
     );
@@ -89,6 +104,7 @@ class VerseAnnotation {
     chapter: chapter,
     verseNumber: verseNumber,
     highlightColor: null,
+    highlightMode: HighlightMode.background,
     comment: comment,
     updatedAt: DateTime.now(),
   );
@@ -99,12 +115,14 @@ class VerseAnnotation {
     'chapter': chapter,
     'verseNumber': verseNumber,
     'highlightColor': highlightColor?.name,
+    'highlightMode': highlightMode.name,
     'comment': comment,
     'updatedAt': updatedAt.toIso8601String(),
   };
 
   factory VerseAnnotation.fromJson(Map<String, dynamic> json) {
     final colorName = json['highlightColor'] as String?;
+    final modeName = json['highlightMode'] as String?;
     return VerseAnnotation(
       id: json['id'] as String,
       bookNumber: json['bookNumber'] as int,
@@ -113,6 +131,12 @@ class VerseAnnotation {
       highlightColor: colorName == null
           ? null
           : HighlightColor.values.firstWhere((c) => c.name == colorName, orElse: () => HighlightColor.yellow),
+      highlightMode: modeName == null
+          ? HighlightMode.background
+          : HighlightMode.values.firstWhere(
+              (m) => m.name == modeName,
+              orElse: () => HighlightMode.background,
+            ),
       comment: json['comment'] as String?,
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );

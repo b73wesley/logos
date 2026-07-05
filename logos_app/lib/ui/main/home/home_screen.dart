@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
               ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
               : vm.errorMessage != null
               ? AppEmptyStateView(title: 'Erro ao carregar', description: vm.errorMessage)
-              : _ReaderBody(vm: vm),
+              : _ReaderBody(key: ValueKey(vm.selectedBookIndex), vm: vm),
         );
       },
     );
@@ -181,29 +181,66 @@ class _IconBtn extends StatelessWidget {
 
 // ── Body ───────────────────────────────────────────────────────────────────
 
-class _ReaderBody extends StatelessWidget {
+class _ReaderBody extends StatefulWidget {
   final HomeViewModel vm;
 
-  const _ReaderBody({required this.vm});
+  const _ReaderBody({super.key, required this.vm});
+
+  @override
+  State<_ReaderBody> createState() => _ReaderBodyState();
+}
+
+class _ReaderBodyState extends State<_ReaderBody> {
+  // Tracks the last chapter we loaded so we don't re-load on every rebuild.
+  String? _lastLoadedChapterKey;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load annotations for the initial chapter after the first frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadCurrentChapter());
+  }
+
+  @override
+  void didUpdateWidget(_ReaderBody old) {
+    super.didUpdateWidget(old);
+    // When the ViewModel's book/chapter changes (e.g. user switches book),
+    // reload annotations if the chapter key actually changed.
+    _loadCurrentChapter();
+  }
+
+  void _loadCurrentChapter() {
+    final book = widget.vm.currentBook;
+    if (book == null) return;
+
+    final chapter = book.chapters[widget.vm.selectedChapterIndex];
+    final key = '${chapter.bookNumber}_${chapter.chapterNumber}';
+    if (key == _lastLoadedChapterKey) return;
+
+    _lastLoadedChapterKey = key;
+    context.read<AnnotationViewModel>().loadChapter(chapter.bookNumber, chapter.chapterNumber);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         PageView.builder(
-          controller: vm.pageController,
-          itemCount: vm.currentBook?.totalChapters ?? 0,
+          controller: widget.vm.pageController,
+          itemCount: widget.vm.currentBook?.totalChapters ?? 0,
           onPageChanged: (page) {
-            vm.onPageChanged(page);
-            // Load annotations for the new chapter.
-            final book = vm.currentBook;
+            widget.vm.onPageChanged(page);
+            // Load annotations for the newly visible chapter.
+            final book = widget.vm.currentBook;
             if (book != null && page < book.chapters.length) {
               final chapter = book.chapters[page];
+              final key = '${chapter.bookNumber}_${chapter.chapterNumber}';
+              _lastLoadedChapterKey = key;
               context.read<AnnotationViewModel>().loadChapter(chapter.bookNumber, chapter.chapterNumber);
             }
           },
           itemBuilder: (context, chapterIndex) {
-            final book = vm.currentBook;
+            final book = widget.vm.currentBook;
             if (book == null || chapterIndex >= book.chapters.length) {
               return const SizedBox.shrink();
             }
@@ -211,12 +248,12 @@ class _ReaderBody extends StatelessWidget {
             return _ChapterPage(
               book: book,
               chapter: chapter,
-              displayMode: vm.verseDisplayMode,
-              fontSize: vm.verseFontSize,
+              displayMode: widget.vm.verseDisplayMode,
+              fontSize: widget.vm.verseFontSize,
             );
           },
         ),
-        Positioned(left: 0, right: 0, bottom: 0, child: _NavigationBar(vm: vm)),
+        Positioned(left: 0, right: 0, bottom: 0, child: _NavigationBar(vm: widget.vm)),
       ],
     );
   }
@@ -418,17 +455,24 @@ class _VerseListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final highlight = annotation?.highlightColor;
+    final mode = annotation?.highlightMode ?? HighlightMode.background;
     final hasComment = annotation?.hasComment ?? false;
+
+    final isBackground = mode == HighlightMode.background;
 
     return GestureDetector(
       onTap: () =>
           VerseAnnotationBottomSheet.show(context, verse: verse, bookName: bookName, existing: annotation),
       child: Container(
         margin: const EdgeInsets.only(bottom: Spacing.xs6),
-        decoration: highlight != null
+        decoration: (highlight != null && isBackground)
             ? BoxDecoration(
                 color: highlight.color,
                 borderRadius: BorderRadius.circular(AppRadius.xs1),
+                border: Border(left: BorderSide(color: highlight.borderColor, width: 3)),
+              )
+            : (highlight != null)
+            ? BoxDecoration(
                 border: Border(left: BorderSide(color: highlight.borderColor, width: 3)),
               )
             : null,
@@ -460,7 +504,10 @@ class _VerseListItem extends StatelessWidget {
                     text: verse.text,
                     style: TextStyle(
                       fontSize: fontSize.verseBodySize,
-                      color: AppColors.darkText90,
+                      color: (highlight != null && !isBackground)
+                          ? highlight.borderColor
+                          : AppColors.darkText90,
+                      fontWeight: (highlight != null && !isBackground) ? FontWeight.w600 : FontWeight.normal,
                       height: 1.7,
                     ),
                   ),
@@ -573,6 +620,8 @@ class _ContinuousChapterTextState extends State<_ContinuousChapterText> {
         verse.verseNumber,
       );
       final highlight = annotation?.highlightColor;
+      final mode = annotation?.highlightMode ?? HighlightMode.background;
+      final isTextColor = mode == HighlightMode.textColor;
 
       // Create a recognizer per verse — tap opens the annotation sheet.
       final recognizer = TapGestureRecognizer()
@@ -608,7 +657,7 @@ class _ContinuousChapterTextState extends State<_ContinuousChapterText> {
               child: Padding(
                 padding: const EdgeInsets.only(left: 1),
                 child: Icon(
-                  Icons.edit_outlined,
+                  Icons.chat_bubble_outline_rounded,
                   size: widget.fontSize.verseNumberSize + 1,
                   color: AppColors.primary.withValues(alpha: 0.75),
                 ),
@@ -618,16 +667,17 @@ class _ContinuousChapterTextState extends State<_ContinuousChapterText> {
         );
       }
 
-      // Verse body — backgroundColor applies the highlight without breaking flow.
+      // Verse body — color or backgroundColor depending on highlightMode.
       spans.add(
         TextSpan(
           text: ' ${verse.text} ',
           recognizer: recognizer,
           style: TextStyle(
             fontSize: widget.fontSize.verseBodySize,
-            color: AppColors.darkText90,
+            color: (highlight != null && isTextColor) ? highlight.borderColor : AppColors.darkText90,
+            fontWeight: (highlight != null && isTextColor) ? FontWeight.w600 : FontWeight.normal,
             height: 1.7,
-            backgroundColor: highlight?.color,
+            backgroundColor: (highlight != null && !isTextColor) ? highlight.color : null,
           ),
         ),
       );
