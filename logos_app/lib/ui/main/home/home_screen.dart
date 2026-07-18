@@ -126,10 +126,12 @@ void _openBookSelector(BuildContext context, HomeViewModel vm) {
     books: vm.books,
     currentBookIndex: vm.selectedBookIndex,
     currentChapterIndex: vm.selectedChapterIndex,
-    onSelect: (bookIdx, chapIdx) {
+    currentVerseNumber: vm.lastSelectedVerseNumber,
+    onSelect: (bookIdx, chapIdx, verseNumber) {
       vm.selectBook(bookIdx);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         vm.selectChapter(chapIdx);
+        vm.selectVerse(verseNumber);
       });
     },
   );
