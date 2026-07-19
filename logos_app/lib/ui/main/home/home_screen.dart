@@ -102,7 +102,6 @@ class _ReaderAppBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: Spacing.xs3),
-            _IconBtn(icon: Icons.search_rounded, onTap: () {}),
             _IconBtn(
               icon: Icons.settings_outlined,
               onTap: () => ReaderSettingsBottomSheet.show(
@@ -724,100 +723,45 @@ class _NavigationBar extends StatelessWidget {
         MediaQuery.of(context).padding.bottom + Spacing.xs6,
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          _NavButton(
-            icon: Icons.chevron_left_rounded,
-            label: 'Anterior',
-            onTap: isFirst ? null : vm.previousChapter,
+          _RoundNavButton(icon: Icons.chevron_left_rounded, onTap: isFirst ? null : vm.previousChapter),
+          const SizedBox(width: Spacing.xs6),
+          _RoundNavButton(
+            icon: Icons.menu_book_rounded,
+            onTap: vm.books.isEmpty ? null : () => _openBookSelector(context, vm),
           ),
-          const SizedBox(width: Spacing.xs4),
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                if (vm.books.isEmpty) return;
-                _openBookSelector(context, vm);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: Spacing.xs5),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.xs1),
-                  boxShadow: [
-                    BoxShadow(color: AppColors.darkText10, blurRadius: 8, offset: const Offset(0, 2)),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppTypography(
-                      vm.currentBook?.name ?? '',
-                      textStyleTheme: TextStyleTheme.labelMedium,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.darkText60,
-                      maxLines: 1,
-                      textOverflow: TextOverflow.ellipsis,
-                    ),
-                    AppTypography(
-                      'Capítulo ${vm.selectedChapterIndex + 1}',
-                      textStyleTheme: TextStyleTheme.bodyMedium,
-                      fontWeight: FontWeight.w700,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: Spacing.xs4),
-          _NavButton(
-            icon: Icons.chevron_right_rounded,
-            label: 'Próximo',
-            onTap: isLast ? null : vm.nextChapter,
-            iconOnRight: true,
-          ),
+          const SizedBox(width: Spacing.xs6),
+          _RoundNavButton(icon: Icons.chevron_right_rounded, onTap: isLast ? null : vm.nextChapter),
         ],
       ),
     );
   }
 }
 
-class _NavButton extends StatelessWidget {
+class _RoundNavButton extends StatelessWidget {
   final IconData icon;
-  final String label;
   final VoidCallback? onTap;
-  final bool iconOnRight;
 
-  const _NavButton({required this.icon, required this.label, required this.onTap, this.iconOnRight = false});
+  const _RoundNavButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
-    final color = enabled ? AppColors.primaryTextButton : AppColors.darkText30;
-
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.xs6, vertical: Spacing.xs5),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
-          color: enabled ? AppColors.primaryBackgroundButton : AppColors.darkText05,
-          borderRadius: BorderRadius.circular(AppRadius.xs1),
+          shape: BoxShape.circle,
+          color: enabled ? AppColors.surface : AppColors.darkText05,
           boxShadow: enabled
               ? [BoxShadow(color: AppColors.darkText10, blurRadius: 8, offset: const Offset(0, 2))]
               : null,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!iconOnRight) Icon(icon, color: color, size: 20),
-            AppTypography(
-              label,
-              textStyleTheme: TextStyleTheme.labelLarge,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-            if (iconOnRight) Icon(icon, color: color, size: 20),
-          ],
-        ),
+        child: Icon(icon, size: 22, color: enabled ? AppColors.primaryTextButton : AppColors.darkText30),
       ),
     );
   }
