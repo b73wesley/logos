@@ -4,9 +4,10 @@ import 'package:logos_app/core/design_tokens/app_colors.dart';
 import 'package:logos_app/core/design_tokens/font_size.dart';
 import 'package:logos_app/core/design_tokens/icon_size.dart';
 import 'package:logos_app/core/design_tokens/spacing.dart';
+import 'package:logos_app/ui/main/bars_visibility_notifier.dart';
+import 'package:provider/provider.dart';
 
 class MainScreen extends StatelessWidget {
-  /// The current shell branch child, injected by GoRouter's StatefulShellRoute.
   final StatefulNavigationShell navigationShell;
 
   const MainScreen({super.key, required this.navigationShell});
@@ -19,18 +20,37 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      body: navigationShell,
-      bottomNavigationBar: _BottomNav(
-        currentIndex: navigationShell.currentIndex,
-        items: _items,
-        onTap: (index) => navigationShell.goBranch(
-          index,
-          // Tapping the active tab returns to its root.
-          initialLocation: index == navigationShell.currentIndex,
-        ),
-      ),
+    return Consumer<BarsVisibilityNotifier>(
+      builder: (context, barsNotifier, _) {
+        return Scaffold(
+          backgroundColor: AppColors.backgroundLight,
+          // Column keeps the nav bar in the layout flow — when it collapses
+          // to zero height the content expands to fill the freed space,
+          // which means the reader's _NavigationBar (prev/book/next) sits
+          // correctly at the true bottom of the screen.
+          body: Column(
+            children: [
+              Expanded(child: navigationShell),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: SizedBox(
+                  height: barsNotifier.visible ? null : 0,
+                  child: _BottomNav(
+                    currentIndex: navigationShell.currentIndex,
+                    items: _items,
+                    onTap: (index) {
+                      // Restores bars whenever the user switches tabs.
+                      context.read<BarsVisibilityNotifier>().show();
+                      navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex);
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

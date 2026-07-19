@@ -9,6 +9,7 @@ import 'package:logos_app/domain/auth/auth_repository.dart';
 import 'package:logos_app/domain/bible/bible_repository.dart';
 import 'package:logos_app/core/preferences.dart';
 import 'package:logos_app/ui/auth/view_model/auth_view_model.dart';
+import 'package:logos_app/ui/main/bars_visibility_notifier.dart';
 import 'package:logos_app/ui/main/home/annotation_view_model.dart';
 import 'package:logos_app/ui/main/home/home_view_model.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +22,9 @@ import 'package:provider/single_child_widget.dart';
 /// - ViewModels: ChangeNotifierProxyProvider (depende de um repository)
 List<SingleChildWidget> buildProviders() {
   return [
+    // Bars visibility — shared between HomeScreen and MainScreen
+    ChangeNotifierProvider(create: (_) => BarsVisibilityNotifier()),
+
     // Auth
     Provider(create: (_) => AuthServiceImpl()),
     ProxyProvider<AuthServiceImpl, AuthRepository>(update: (_, service, __) => AuthRepositoryImpl(service)),
