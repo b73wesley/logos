@@ -20,6 +20,8 @@ import 'package:logos_app/ui/widgets/app_typography.dart';
 import 'package:logos_app/ui/widgets/app_typography_md.dart';
 import 'package:provider/provider.dart';
 
+// ── Screen ─────────────────────────────────────────────────────────────────
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -29,8 +31,6 @@ class HomeScreen extends StatelessWidget {
       builder: (context, vm, _) {
         return Scaffold(
           backgroundColor: AppColors.backgroundLight,
-          // No appBar here — it lives inside the SliverAppBar of each page
-          // so it scrolls naturally with the content.
           body: vm.isLoading
               ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
               : vm.errorMessage != null
@@ -38,141 +38,6 @@ class HomeScreen extends StatelessWidget {
               : _ReaderBody(key: ValueKey(vm.selectedBookIndex), vm: vm),
         );
       },
-    );
-  }
-}
-
-// ── AppBar content ─────────────────────────────────────────────────────────
-// Rendered inside a SliverAppBar so it scrolls with the text.
-
-class _ReaderAppBar extends StatelessWidget {
-  final HomeViewModel vm;
-
-  const _ReaderAppBar({required this.vm});
-
-  @override
-  Widget build(BuildContext context) {
-    final book = vm.currentBook;
-
-    return Container(
-      color: AppColors.backgroundLight,
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.xs4),
-      child: Row(
-        children: [
-          _ControlChip(
-            label: vm.selectedTranslation.abbreviation,
-            onTap: () => TranslationSelectorBottomSheet.show(
-              context,
-              current: vm.selectedTranslation,
-              onSelect: vm.selectTranslation,
-            ),
-          ),
-          const SizedBox(width: Spacing.xs3),
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                if (vm.books.isEmpty) return;
-                _openBookSelector(context, vm);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: Spacing.xs6, vertical: Spacing.xs2),
-                decoration: BoxDecoration(
-                  color: AppColors.darkText05,
-                  borderRadius: BorderRadius.circular(AppRadius.xs1),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: AppTypography(
-                        book != null ? '${book.name} ${vm.selectedChapterIndex + 1}' : '—',
-                        textStyleTheme: TextStyleTheme.bodyLarge,
-                        fontWeight: FontWeight.w600,
-                        maxLines: 1,
-                        textOverflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: Spacing.xs2),
-                    const Icon(Icons.expand_more_rounded, size: 18, color: AppColors.darkText60),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: Spacing.xs3),
-          _IconBtn(
-            icon: Icons.settings_outlined,
-            onTap: () => ReaderSettingsBottomSheet.show(
-              context,
-              currentMode: vm.verseDisplayMode,
-              currentFontSize: vm.verseFontSize,
-              onModeChanged: vm.setVerseDisplayMode,
-              onFontSizeChanged: vm.setVerseFontSize,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-void _openBookSelector(BuildContext context, HomeViewModel vm) {
-  BookSelectorBottomSheet.show(
-    context,
-    books: vm.books,
-    currentBookIndex: vm.selectedBookIndex,
-    currentChapterIndex: vm.selectedChapterIndex,
-    currentVerseNumber: vm.lastSelectedVerseNumber,
-    onSelect: (bookIdx, chapIdx, verseNumber) {
-      vm.selectBook(bookIdx);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        vm.selectChapter(chapIdx);
-        vm.selectVerse(verseNumber);
-      });
-    },
-  );
-}
-
-class _ControlChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _ControlChip({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.xs6, vertical: Spacing.xs2),
-        decoration: BoxDecoration(
-          color: AppColors.primaryBackgroundButton,
-          borderRadius: BorderRadius.circular(AppRadius.xs1),
-        ),
-        child: AppTypography(
-          label,
-          textStyleTheme: TextStyleTheme.labelLarge,
-          fontWeight: FontWeight.w700,
-          color: AppColors.primaryTextButton,
-        ),
-      ),
-    );
-  }
-}
-
-class _IconBtn extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _IconBtn({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      icon: Icon(icon, color: AppColors.darkText70, size: 22),
-      padding: const EdgeInsets.all(Spacing.xs2),
-      constraints: const BoxConstraints(),
     );
   }
 }
@@ -191,7 +56,6 @@ class _ReaderBody extends StatefulWidget {
 class _ReaderBodyState extends State<_ReaderBody> {
   String? _lastLoadedChapterKey;
 
-  // Scroll delta accumulator — avoids flickering on tiny movements.
   double _scrollDelta = 0;
   static const _threshold = 10.0;
 
@@ -218,8 +82,6 @@ class _ReaderBodyState extends State<_ReaderBody> {
   }
 
   void _onScroll(double delta) {
-    // Reset accumulator when direction reverses to make the threshold
-    // responsive immediately after a direction change.
     if ((delta > 0 && _scrollDelta < 0) || (delta < 0 && _scrollDelta > 0)) {
       _scrollDelta = 0;
     }
@@ -290,7 +152,7 @@ class _ReaderBodyState extends State<_ReaderBody> {
 
 // ── Chapter page ───────────────────────────────────────────────────────────
 
-class _ChapterPage extends StatelessWidget {
+class _ChapterPage extends StatefulWidget {
   final BibleBook book;
   final BibleChapter chapter;
   final HomeViewModel vm;
@@ -308,21 +170,33 @@ class _ChapterPage extends StatelessWidget {
   });
 
   @override
+  State<_ChapterPage> createState() => _ChapterPageState();
+}
+
+class _ChapterPageState extends State<_ChapterPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<AnnotationViewModel>(
       builder: (context, annotationVm, _) {
         final chapterNote = annotationVm.chapterNote;
-        final hasNote = annotationVm.chapterHasNote(chapter.bookNumber, chapter.chapterNumber);
+        final hasNote = annotationVm.chapterHasNote(widget.chapter.bookNumber, widget.chapter.chapterNumber);
 
         return NotificationListener<ScrollUpdateNotification>(
           onNotification: (n) {
-            onScroll(n.scrollDelta ?? 0);
+            widget.onScroll(n.scrollDelta ?? 0);
             return false;
           },
           child: CustomScrollView(
+            controller: _scrollController,
             slivers: [
-              // AppBar as a sliver — floats back when scrolling up (snap),
-              // disappears when scrolling down. No manual animation needed.
               SliverAppBar(
                 floating: true,
                 snap: true,
@@ -331,7 +205,7 @@ class _ChapterPage extends StatelessWidget {
                 surfaceTintColor: Colors.transparent,
                 elevation: 0,
                 toolbarHeight: 56,
-                title: _ReaderAppBar(vm: vm),
+                title: _ReaderAppBar(vm: widget.vm),
                 titleSpacing: 0,
               ),
               SliverToBoxAdapter(
@@ -355,9 +229,9 @@ class _ChapterPage extends StatelessWidget {
                       GestureDetector(
                         onTap: () => ChapterNoteBottomSheet.show(
                           context,
-                          bookNumber: chapter.bookNumber,
-                          bookName: book.name,
-                          chapter: chapter.chapterNumber,
+                          bookNumber: widget.chapter.bookNumber,
+                          bookName: widget.book.name,
+                          chapter: widget.chapter.chapterNumber,
                           existing: chapterNote,
                         ),
                         child: Stack(
@@ -365,7 +239,7 @@ class _ChapterPage extends StatelessWidget {
                           alignment: Alignment.center,
                           children: [
                             AppTypography(
-                              '${chapter.chapterNumber}',
+                              '${widget.chapter.chapterNumber}',
                               textStyleTheme: TextStyleTheme.headlineLarge,
                               fontWeight: FontWeight.w700,
                               textAlign: TextAlign.center,
@@ -391,9 +265,9 @@ class _ChapterPage extends StatelessWidget {
                         GestureDetector(
                           onTap: () => ChapterNoteBottomSheet.show(
                             context,
-                            bookNumber: chapter.bookNumber,
-                            bookName: book.name,
-                            chapter: chapter.chapterNumber,
+                            bookNumber: widget.chapter.bookNumber,
+                            bookName: widget.book.name,
+                            chapter: widget.chapter.chapterNumber,
                             existing: chapterNote,
                           ),
                           child: Container(
@@ -432,23 +306,18 @@ class _ChapterPage extends StatelessWidget {
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  Spacing.screenHorizontal,
-                  0,
-                  Spacing.screenHorizontal,
-                  96, // space for _NavigationBar
-                ),
-                sliver: displayMode == VerseDisplayMode.list
+                padding: const EdgeInsets.fromLTRB(Spacing.screenHorizontal, 0, Spacing.screenHorizontal, 96),
+                sliver: widget.displayMode == VerseDisplayMode.list
                     ? _VerseListSliver(
-                        chapter: chapter,
-                        fontSize: fontSize,
-                        bookName: book.name,
+                        chapter: widget.chapter,
+                        fontSize: widget.fontSize,
+                        bookName: widget.book.name,
                         annotationVm: annotationVm,
                       )
                     : _VerseBibleStyleSliver(
-                        chapter: chapter,
-                        fontSize: fontSize,
-                        bookName: book.name,
+                        chapter: widget.chapter,
+                        fontSize: widget.fontSize,
+                        bookName: widget.book.name,
                         annotationVm: annotationVm,
                       ),
               ),
@@ -806,6 +675,140 @@ class _RoundNavButton extends StatelessWidget {
         ),
         child: Icon(icon, size: 22, color: enabled ? AppColors.primaryTextButton : AppColors.darkText30),
       ),
+    );
+  }
+}
+
+// ── AppBar content ─────────────────────────────────────────────────────────
+
+class _ReaderAppBar extends StatelessWidget {
+  final HomeViewModel vm;
+
+  const _ReaderAppBar({required this.vm});
+
+  @override
+  Widget build(BuildContext context) {
+    final book = vm.currentBook;
+
+    return Container(
+      color: AppColors.backgroundLight,
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.xs4),
+      child: Row(
+        children: [
+          _ControlChip(
+            label: vm.selectedTranslation.abbreviation,
+            onTap: () => TranslationSelectorBottomSheet.show(
+              context,
+              current: vm.selectedTranslation,
+              onSelect: vm.selectTranslation,
+            ),
+          ),
+          const SizedBox(width: Spacing.xs3),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (vm.books.isEmpty) return;
+                _openBookSelector(context, vm);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: Spacing.xs6, vertical: Spacing.xs2),
+                decoration: BoxDecoration(
+                  color: AppColors.darkText05,
+                  borderRadius: BorderRadius.circular(AppRadius.xs1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: AppTypography(
+                        book != null ? '${book.name} ${vm.selectedChapterIndex + 1}' : '—',
+                        textStyleTheme: TextStyleTheme.bodyLarge,
+                        fontWeight: FontWeight.w600,
+                        maxLines: 1,
+                        textOverflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: Spacing.xs2),
+                    const Icon(Icons.expand_more_rounded, size: 18, color: AppColors.darkText60),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: Spacing.xs3),
+          _IconBtn(
+            icon: Icons.settings_outlined,
+            onTap: () => ReaderSettingsBottomSheet.show(
+              context,
+              currentMode: vm.verseDisplayMode,
+              currentFontSize: vm.verseFontSize,
+              onModeChanged: vm.setVerseDisplayMode,
+              onFontSizeChanged: vm.setVerseFontSize,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+void _openBookSelector(BuildContext context, HomeViewModel vm) {
+  BookSelectorBottomSheet.show(
+    context,
+    books: vm.books,
+    currentBookIndex: vm.selectedBookIndex,
+    currentChapterIndex: vm.selectedChapterIndex,
+    onSelect: (bookIdx, chapIdx) {
+      vm.selectBook(bookIdx);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        vm.selectChapter(chapIdx);
+      });
+    },
+  );
+}
+
+class _ControlChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _ControlChip({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.xs6, vertical: Spacing.xs2),
+        decoration: BoxDecoration(
+          color: AppColors.primaryBackgroundButton,
+          borderRadius: BorderRadius.circular(AppRadius.xs1),
+        ),
+        child: AppTypography(
+          label,
+          textStyleTheme: TextStyleTheme.labelLarge,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primaryTextButton,
+        ),
+      ),
+    );
+  }
+}
+
+class _IconBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _IconBtn({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onTap,
+      icon: Icon(icon, color: AppColors.darkText70, size: 22),
+      padding: const EdgeInsets.all(Spacing.xs2),
+      constraints: const BoxConstraints(),
     );
   }
 }

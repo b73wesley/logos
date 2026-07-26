@@ -32,8 +32,8 @@ class HomeViewModel extends ChangeNotifier {
   // Verse font size — persisted via SharedPreferences.
   late VerseFontSize verseFontSize;
 
-  // Last verse the user navigated to — used to highlight on the selector.
-  int? lastSelectedVerseNumber;
+  // Last verse the user navigated to — unused, kept for potential future use.
+  // int? lastSelectedVerseNumber;
 
   // ── Derived ───────────────────────────────────────────────────────────────
 
@@ -144,13 +144,6 @@ class HomeViewModel extends ChangeNotifier {
     if (size == verseFontSize) return;
     verseFontSize = size;
     await _prefs.setVerseFontSize(size);
-    notifyListeners();
-  }
-
-  /// Called when the user picks a specific verse from the book selector.
-  /// Stores the verse number so the UI can scroll to it.
-  void selectVerse(int? verseNumber) {
-    lastSelectedVerseNumber = verseNumber;
     notifyListeners();
   }
 
